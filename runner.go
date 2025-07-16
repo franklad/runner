@@ -29,8 +29,6 @@
 //     provided.
 //   - Use the provided ctx in Run for spawning internal goroutines, and join them in Stop
 //     to prevent orphans or leaks.
-//   - Align ShutdownTimeout with your environment's grace period (e.g., Kubernetes default
-//     is 30s; set to 20-25s to leave buffer).
 //
 // Usage:
 //
@@ -85,9 +83,9 @@ type Runner struct {
 	sigCancel context.CancelFunc
 }
 
-// NewRunner creates a new Runner instance with the given processes.
+// New creates a new Runner instance with the given processes.
 // Provide processes in the desired stop order (e.g., reverse dependency order).
-func NewRunner(ctx context.Context, processes ...Process) *Runner {
+func New(ctx context.Context, processes ...Process) *Runner {
 	log := logger.New().FromContext(ctx).WithFields("engine", "runner")
 	log.Info("initializing runner engine")
 
