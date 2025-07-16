@@ -29,8 +29,6 @@
 //     provided.
 //   - Use the provided ctx in Run for spawning internal goroutines, and join them in Stop
 //     to prevent orphans or leaks.
-//   - Align ShutdownTimeout with your environment's grace period (e.g., Kubernetes default
-//     is 30s; set to 20-25s to leave buffer).
 //
 // Usage:
 //
@@ -85,9 +83,9 @@ type Runner struct {
 	sigCancel context.CancelFunc
 }
 
-// NewRunner creates a new Runner instance with the given processes.
+// New creates a new Runner instance with the given processes.
 // Provide processes in the desired stop order (e.g., reverse dependency order).
-func NewRunner(ctx context.Context, processes ...Process) *Runner {
+func New(ctx context.Context, processes ...Process) *Runner {
 	log := logger.New().FromContext(ctx).WithFields("engine", "runner")
 	log.Info("initializing runner engine")
 
@@ -137,7 +135,6 @@ func (r *Runner) Run(ctx context.Context) *Runner {
 // It collects any errors during stopping.
 // After ThenStop returns, the Runner should not be reused.
 // Stopping is sequential in the order processes were provided, allowing for dependency management.
-// The overall shutdown is bounded by ShutdownTimeout; if earlier stops take time, later ones may have less time before ctx cancels.
 func (r *Runner) ThenStop() {
 	select {
 	case <-r.sigCtx.Done():
@@ -146,7 +143,7 @@ func (r *Runner) ThenStop() {
 		r.log.Info("received internal stop signal, initiating graceful shutdown", "signal", sig)
 	}
 
-	stopCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	stopCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	for _, p := range r.processes {
