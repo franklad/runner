@@ -135,7 +135,6 @@ func (r *Runner) Run(ctx context.Context) *Runner {
 // It collects any errors during stopping.
 // After ThenStop returns, the Runner should not be reused.
 // Stopping is sequential in the order processes were provided, allowing for dependency management.
-// The overall shutdown is bounded by ShutdownTimeout; if earlier stops take time, later ones may have less time before ctx cancels.
 func (r *Runner) ThenStop() {
 	select {
 	case <-r.sigCtx.Done():
@@ -144,7 +143,7 @@ func (r *Runner) ThenStop() {
 		r.log.Info("received internal stop signal, initiating graceful shutdown", "signal", sig)
 	}
 
-	stopCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	stopCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	for _, p := range r.processes {
